@@ -103,6 +103,39 @@
     </section>
   </div>
 
+  <script>
+  (() => {
+    const p = new URLSearchParams(location.search);
+    const mode = p.get('potpolio') === '1';
+    if (mode) {
+      let r = document.head.querySelector('meta[name="robots"]');
+      if (!r) { r = document.createElement('meta'); r.name = 'robots'; document.head.appendChild(r); }
+      r.content = 'noindex,nofollow,noarchive,nosnippet';
+      document.documentElement.dataset.presentationMode = 'portfolio';
+      const keep = (value) => {
+        try {
+          const u = new URL(value, location.href);
+          if (u.origin !== location.origin) return value;
+          u.searchParams.set('potpolio', '1');
+          return u.href;
+        } catch { return value; }
+      };
+      document.addEventListener('click', (e) => {
+        const a = e.target.closest?.('a[href]');
+        if (a && !a.href.startsWith('javascript:') && !a.href.startsWith('mailto:') && !a.href.startsWith('tel:')) a.href = keep(a.href);
+      }, true);
+      ['pushState', 'replaceState'].forEach((k) => {
+        const original = history[k];
+        history[k] = function(state, title, url) { return original.call(this, state, title, url ? keep(url) : url); };
+      });
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = './presentation-standard.js';
+    s.defer = true;
+    document.head.appendChild(s);
+  })();
+  </script>
   <script src="./version.js"></script>
   <script src="./app.js"></script>
 </body>
